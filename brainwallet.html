@@ -1,0 +1,146 @@
+<html style='height:100%'>
+<head>
+	<title>Qora Brain Wallet</title>
+	<script src="jquery-2.2.0.js"></script>
+	<link href="bootstrap.css" rel="stylesheet">
+	<script src="nacl-fast.js" charset="utf-8"></script>
+	<script src="Base58.js" charset="utf-8"></script>
+	<script src="sha256.js" charset="utf-8"></script>
+	<script src="ripemd160.js" charset="utf-8"></script>
+	<script src="qora.js" charset="utf-8"></script>
+</head>
+
+<script type="text/javascript">
+
+	function doAccountAddressFromPublicKey() {
+	
+		var base58AccountPublicKey = document.getElementById('base58AccountPublicKey').value;
+		
+		if(Base58.decode(base58AccountPublicKey).length != 32) {
+			document.getElementById('base58AccountAddress').value = '';
+			alert("invalid PublicKey!");
+			return;
+		}
+		
+		var base58AccountAddress = getAccountAddressFromPublicKey(base58AccountPublicKey);
+		document.getElementById('base58AccountAddress').value = base58AccountAddress;
+	}
+
+	function doBrain()
+	{
+		var brainWalletPassphrase = document.getElementById('brainWalletPassphrase').value;
+		
+		if(brainWalletPassphrase.length < 8) {
+			document.getElementById('base58BaseSeed').value = '';
+			document.getElementById('output').innerHTML = '';
+			alert("invalid passphrase length!\nIt should be at least 8 characters.");
+			return;
+		}
+		
+		var byteSeed = new Uint8Array(SHA256.digest(SHA256.digest(brainWalletPassphrase)));
+		var base58BaseSeed = Base58.encode(byteSeed);
+		
+		document.getElementById('base58BaseSeed').value = base58BaseSeed;
+		
+		doAccounts();
+	}
+	
+	function doAccountFromSeed(base58AccountSeed) 
+	{
+		if(base58AccountSeed) {
+			document.getElementById('base58AccountSeed').value = base58AccountSeed;
+		} else {
+			base58AccountSeed = document.getElementById('base58AccountSeed').value;
+		}
+		
+		if(Base58.decode(base58AccountSeed).length != 32) {
+			document.getElementById('base58AccountPublicKey').value = '';
+			document.getElementById('base58AccountPrivateKey').value = '';
+			document.getElementById('base58AccountAddress').value = '';
+			alert("invalid seed!");
+			return;
+		}
+		
+		keyPair = getKeyPairFromSeed(base58AccountSeed, false);
+		
+		var base58AccountAddress = getAccountAddressFromPublicKey(keyPair.publicKey);
+		
+		var base58AccountPublicKey = Base58.encode(keyPair.publicKey);
+		var base58AccountPrivateKey = Base58.encode(keyPair.privateKey);
+		
+		document.getElementById('base58AccountPublicKey').value = base58AccountPublicKey;
+		document.getElementById('base58AccountPrivateKey').value = base58AccountPrivateKey;
+		document.getElementById('base58AccountAddress').value = base58AccountAddress;
+	}
+	
+	function doAccounts(){
+
+		var base58BaseSeed = document.getElementById('base58BaseSeed').value;
+
+		document.getElementById('output').innerHTML = '';
+		
+		if(base58BaseSeed == '') {
+			return;
+		}
+		
+		
+		countAddrs = document.getElementById('countAddrs').value;
+
+		if(isNaN(countAddrs) || countAddrs < 1) {
+			alert("invalid count!");
+			return;
+		}
+
+		seed = Base58.decode(base58BaseSeed);
+	
+		if(seed.length != 32) {
+			alert("invalid seed!");
+			return;
+		}
+		
+		for (var nonce = 0; nonce < countAddrs; nonce ++) {
+			var accountSeed = generateAccountSeed(seed, nonce, false);
+			var keyPair = getKeyPairFromSeed(accountSeed);
+			var base58addressSeed = Base58.encode(accountSeed);
+			
+			document.getElementById('output').innerHTML += '<hr><span style="cursor: pointer;" onclick="doAccountFromSeed(\''+base58addressSeed+'\')">' 
+			+ '' + (nonce+1) + ' '
+			+ 'addr: <b>' + getAccountAddressFromPublicKey(keyPair.publicKey) + '</b><br>'
+			+ 'seed: ' + base58addressSeed + ' '
+			+ '</span>';
+		}
+	}
+	
+</script>
+<body style="margin:4; padding:25">
+	
+	<center>
+	<a href="http://qora.co.in/QoraBrainWallet/"><img src="http://qora.co.in/img/qora1.png"></a>
+	<br><br><b><a href=brainwallet.html>BrainWallet</a> | <a href=payment.html>Payment Processor</a> | <a href=http://mirror.qora.co.in:9090/index/blockexplorer.html>BlockExplorer</a> </b><br><br>
+	<table>
+	<tr><td>
+	Brain Wallet Passphrase:<br>
+	<input style='width:485px;' type="text" class="enter" size=60 value="" autofocus id="brainWalletPassphrase"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doBrain()"/><br><br>
+
+	Base Seed:<br>
+	<input style='width:485px;' type="text" class="enter" size=60 value="" id="base58BaseSeed"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doAccounts()"/><br><br>
+	Count: <input type="text" class="enter" size=5 value="10" id="countAddrs"/><br>
+	<br>
+	<div id="output"></div><br>
+
+	<b>Account:</b><br>
+    <span style='width:80px; display: inline-block;'>Seed:</span> <input style='width:400px;' type="text" class="enter" value="" id="base58AccountSeed"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doAccountFromSeed()"/><br>
+
+    <span style='width:80px; display: inline-block;'>privateKey:</span>
+	<input style='width:480px; background-color : #f1f1f1;' type="text" class="enter" value="" readonly id="base58AccountPrivateKey"/><br>
+
+	<span style='width:80px; display: inline-block;'>publicKey:</span> 
+	<input style='width:400px;'  type="text" class="enter" value="" id="base58AccountPublicKey"/><input  style='width:80px;' type="button" value="Сonvert" OnClick="doAccountAddressFromPublicKey()"/><br>
+	<span style='width:80px; display: inline-block;'>Address:</span>
+    <input style='width:480px; background-color : #f1f1f1;' type="text" class="enter" value="" readonly id="base58AccountAddress"/><br>
+	</table>
+	<br><br>
+	(c) <a href="mailto:agran@agran.net">agran</a>
+	</center>
+</body>
+	

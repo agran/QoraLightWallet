@@ -1,0 +1,190 @@
+<html style='height:100%'>
+<head>
+	<title>Qora Payment Processor</title>
+	<script src="jquery-2.2.0.js"></script>
+	<link href="bootstrap.css" rel="stylesheet">
+	<script src="nacl-fast.js" charset="utf-8"></script>
+	<script src="Base58.js" charset="utf-8"></script>
+	<script src="sha256.js" charset="utf-8"></script>
+	<script src="ripemd160.js" charset="utf-8"></script>
+	<script src="qora.js" charset="utf-8"></script>
+</head>
+
+<script type="text/javascript">
+
+	var server = 'http://mirror.qora.co.in:9090';
+	//var server = 'http://127.0.0.1:9090';
+	
+	function doLoadLastReference()
+	{
+		var base58SenderAccountAddress = $('#base58SenderAccountAddress').val();
+
+		$('#base58LastReferenceOfAccount').val('...');
+		$.post( server + "/index/api.html", { type: "get", apiurl: "/addresses/lastreference/" + base58SenderAccountAddress } )
+			.done(function( data ) {
+				
+				if(data.type == 'success'){
+					var base58LastReferenceOfAccount = data.result;
+					$('#base58LastReferenceOfAccount').val(base58LastReferenceOfAccount);
+				}
+				
+				if(data.type == 'apicallerror'){
+					alert(data.errordetail);
+					$('#base58LastReferenceOfAccount').val('');
+				}
+				
+			})
+			.fail(function() {
+				alert( "error" );
+			});
+	}
+
+	var casheBase58addressSeed = '';
+	
+	function doSenderAccountAddressFromSenderSeed() 
+	{
+		var base58addressSeed = $('#base58SenderAccountSeed').val();
+		
+		if(base58addressSeed == '' || casheBase58addressSeed == base58addressSeed) {
+			return;
+		} else {
+			casheBase58addressSeed = base58addressSeed;
+		}
+		
+		if(Base58.decode(base58addressSeed).length != 32) {
+			$('#base58SenderAccountAddress').val('');
+			return;
+		}
+		
+		keyPair = getKeyPairFromSeed(base58addressSeed, false);
+		
+		var base58SenderAccountAddress = getAccountAddressFromPublicKey(keyPair.publicKey);
+		
+		$('#base58SenderAccountAddress').val(base58SenderAccountAddress);
+	}
+	
+	function doNowTime()
+	{
+		var date = new Date();
+		$('#datetime').val(date.toLocaleDateString() + ' ' + date.toLocaleTimeString());
+		$('#timestamp').val(date.getTime());
+		
+	}
+
+	function sleep(ms) {
+		ms += new Date().getTime();
+		while (new Date() < ms){}
+	} 
+	
+	function doPaymentTransaction() {
+	
+		var base58SenderAccountSeed = document.getElementById('base58SenderAccountSeed').value;
+		
+		var senderAccountSeed = Base58.decode(base58SenderAccountSeed);
+		
+		if(senderAccountSeed.length != 32) {
+			$('#base58SenderAccountAddress').val('');
+			alert("invalid seed!");
+			return;
+		}
+		
+		keyPair = getKeyPairFromSeed(senderAccountSeed);
+		
+		var base58SenderAccountAddress = getAccountAddressFromPublicKey(keyPair.publicKey);
+		
+		$('#base58SenderAccountAddress').val(base58SenderAccountAddress);
+
+		
+		if($('#base58LastReferenceOfAccount').val() == "") {
+			doLoadLastReference();
+			sleep(200);
+		}
+		
+		if($('#timestamp').val() == "") {
+			doNowTime();
+		}
+		
+		var recipientAccountAddress = Base58.decode($('#base58RecipientAccountAddress').val());
+		
+		var base58LastReferenceOfAccount = Base58.decode($('#base58LastReferenceOfAccount').val());
+		
+		if(base58LastReferenceOfAccount.length != 64) {
+			alert("invalid reference!");
+			return;
+		}
+		
+		var amount = parseFloat($('#amount').val());
+		var fee = parseFloat($('#fee').val());
+		var timestamp = parseInt($('#timestamp').val());
+		
+		signature = generateSignaturePaymentTransaction(keyPair, base58LastReferenceOfAccount, recipientAccountAddress, amount, fee, timestamp);
+		
+		paymentTransactionRaw = generatePaymentTransaction(keyPair, base58LastReferenceOfAccount, recipientAccountAddress, amount, fee, timestamp, signature);
+		
+		$("#txRaw").val(Base58.encode(paymentTransactionRaw));
+
+	}
+
+	function doProcess()
+	{
+		var txRaw = $("#txRaw").val();
+		
+		if(!txRaw) {
+			return;
+		}
+		
+		$('#output').html('Processing...');
+		
+		var server = $("#nodeUrl").val();
+		
+		$.post( server + "/index/api.html", { type: "post", apiurl: "/transactions/process", json: txRaw } )
+			.done(function( data ) {
+				$("#output").val(''+data.result);
+			})
+			.fail(function() {
+				$("#output").val('error!');			
+			});
+	}
+	
+	
+</script>
+<body style="margin:4; padding:25" onload="setInterval(doSenderAccountAddressFromSenderSeed, 300);">
+	
+	<center>
+	<a href="http://qora.co.in/light/payments.html"><img src="http://qora.co.in/img/qora1.png"></a>
+	<br><br><b><a href=brainwallet.html>BrainWallet</a> | <a href=payment.html>Payment Processor</a> | <a href=http://mirror.qora.co.in:9090/index/blockexplorer.html>BlockExplorer</a> </b><br><br>
+	<table>
+	<tr><td>
+	
+	<b>Sender:</b><br>
+    <span style='width:110px; display: inline-block;'>Account Seed:</span> <input autofocus style='width:400px;' type="text" value="" id="base58SenderAccountSeed"/><br>
+    <span style='width:110px; display: inline-block;'>Account addr:</span> <input style='width:400px;' type="text" value="" id="base58SenderAccountAddress"/><br>
+	<span style='width:110px; display: inline-block;'>Reference:</span> <input style='width:360px;' type="text" value="" id="base58LastReferenceOfAccount"/><input  style='width:40px;' type="button" value="Get" OnClick="doLoadLastReference()"/><br>
+
+    <br><b>Recipient:</b><br>
+    <span style='width:110px; display: inline-block;'>Account addr:</span> <input style='width:400px;' type="text" value="QTz6fSV2VNc2wjwwsw57kwQzgQhmGw5idQ" id="base58RecipientAccountAddress"/><br>
+	
+	<br>
+    <span style='width:110px; display: inline-block;'>Amount:</span> 
+	<input style='width:165px;' type="text" value="50000.00000000" id="amount"/><span style='width:50px; display: inline-block;'>&nbsp;qora</span><span style='width:40px; display: inline-block;'>Fee:</span><input style='width:100px;' type="text" value="1.00000000" id="fee"/><span style='width:40px; display: inline-block;'>&nbsp;qora</span>
+	
+	<br><br>
+	<span style='width:110px; display: inline-block;'>Timestamp:</span> <input style='width:122px;' type="text" value="" id="timestamp"/><span style='width:80px; display: inline-block;'>&nbsp;DateTime:</span><input style='width:153px; background-color : #f1f1f1;' readonly type="text" value="" id="datetime"/><input  style='width:45px;' type="button" value="Now" OnClick="doNowTime()"/><br>
+
+	<br><br>
+	<input  style='width:515px;' type="button" value="Generate Transaction" OnClick="doPaymentTransaction()"/><br>
+
+
+	<textarea style='width:515px; height: 100px;' id=txRaw></textarea><br>	
+
+	<span style='width:110px; display: inline-block;'>&nbsp;&nbsp;via node:</span> <input style='width:400px;' type="text" value="http://mirror.qora.co.in:9090" id="nodeUrl"/><br>
+	<input  style='width:515px;' type="button" value="Process" OnClick="doProcess()"/><br><br>
+	Result:<br>
+	<textarea style='width:515px; height: 100px;' id=output></textarea><br>	
+
+	<br>
+	</table>
+	(c) <a href="mailto:agran@agran.net">agran</a>
+	</center>
+</body>
+	
