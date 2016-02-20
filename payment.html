@@ -12,15 +12,22 @@
 
 <script type="text/javascript">
 
-	var server = 'http://mirror.qora.co.in:9090';
-	//var server = 'http://127.0.0.1:9090';
+	var nodeUrl = 'http://mirror.qora.co.in:9090';
+	//var nodeUrl = 'http://127.0.0.1:9090';
 	
 	function doLoadLastReference()
 	{
 		var base58SenderAccountAddress = $('#base58SenderAccountAddress').val();
 
+		if(base58SenderAccountAddress == '') {
+			$("#output").val('AccountAddress is null');
+			return;
+		}
+		
+		var nodeUrl = $("#nodeUrl").val();
+
 		$('#base58LastReferenceOfAccount').val('...');
-		$.post( server + "/index/api.html", { type: "get", apiurl: "/addresses/lastreference/" + base58SenderAccountAddress } )
+		$.post( nodeUrl + "/index/api.html", { type: "get", apiurl: "/addresses/lastreference/" + base58SenderAccountAddress } )
 			.done(function( data ) {
 				
 				if(data.type == 'success'){
@@ -29,13 +36,13 @@
 				}
 				
 				if(data.type == 'apicallerror'){
-					alert(data.errordetail);
+					$("#output").val(data.errordetail);
 					$('#base58LastReferenceOfAccount').val('');
 				}
 				
 			})
 			.fail(function() {
-				alert( "error" );
+				$("#output").val( "error" );
 			});
 	}
 
@@ -84,7 +91,7 @@
 		
 		if(senderAccountSeed.length != 32) {
 			$('#base58SenderAccountAddress').val('');
-			alert("invalid seed!");
+			$("#output").val("invalid seed!");
 			return;
 		}
 		
@@ -95,7 +102,7 @@
 		$('#base58SenderAccountAddress').val(base58SenderAccountAddress);
 
 		
-		if($('#base58LastReferenceOfAccount').val() == "") {
+		if($('#base58LastReferenceOfAccount').val() == "" || $('#base58LastReferenceOfAccount').val() == 'false') {
 			doLoadLastReference();
 			sleep(200);
 		}
@@ -106,10 +113,15 @@
 		
 		var recipientAccountAddress = Base58.decode($('#base58RecipientAccountAddress').val());
 		
-		var base58LastReferenceOfAccount = Base58.decode($('#base58LastReferenceOfAccount').val());
+		var base58LastReferenceOfAccount = [];
+		try {
+			base58LastReferenceOfAccount = Base58.decode($('#base58LastReferenceOfAccount').val());
+		} catch (err) {
+			base58LastReferenceOfAccount = [];
+		}
 		
 		if(base58LastReferenceOfAccount.length != 64) {
-			alert("invalid reference!");
+			$("#output").val("invalid reference!");
 			return;
 		}
 		
@@ -135,23 +147,59 @@
 		
 		$('#output').html('Processing...');
 		
-		var server = $("#nodeUrl").val();
+		var nodeUrl = $("#nodeUrl").val();
 		
-		$.post( server + "/index/api.html", { type: "post", apiurl: "/transactions/process", json: txRaw } )
+		$.post( nodeUrl + "/index/api.html", { type: "post", apiurl: "/transactions/process", json: txRaw } )
 			.done(function( data ) {
-				$("#output").val(''+data.result);
+				
+				if(data.type == 'apicallerror')	{
+					$("#output").val(''+data.errordetail);
+				}
+				if(data.type == 'success')	{
+					
+					if(isNaN(data.result)){
+						$("#output").val(''+data.result);
+					} else {
+						switch (data.result) {
+							case "1":
+								$("#output").val('VALIDATE_OK');
+								break
+							case "2":
+								$("#output").val('INVALID_ADDRESS');
+								break
+							case "3":
+								$("#output").val('NEGATIVE_AMOUNT');
+								break
+							case "4":
+								$("#output").val('NEGATIVE_FEE');
+								break
+							case "5":
+								$("#output").val('NO_BALANCE');
+								break
+							case "6":
+								$("#output").val('INVALID_REFERENCE');
+								break
+						}
+					}
+				}
 			})
 			.fail(function() {
 				$("#output").val('error!');			
 			});
 	}
 	
+	function onLoad()
+	{
+		$("#nodeUrl").val(nodeUrl);
+		setInterval(doSenderAccountAddressFromSenderSeed, 300);
+	}
+	
 	
 </script>
-<body style="margin:4; padding:25" onload="setInterval(doSenderAccountAddressFromSenderSeed, 300);">
+<body style="margin:4; padding:25" onload="onLoad()">
 	
 	<center>
-	<a href="http://qora.co.in/light/payments.html"><img src="http://qora.co.in/img/qora1.png"></a>
+	<a href="http://qora.co.in/light/payments.html"><img src="qora.png"></a>
 	<br><br><b><a href=brainwallet.html>BrainWallet</a> | <a href=payment.html>Payment Processor</a> | <a href=http://mirror.qora.co.in:9090/index/blockexplorer.html>BlockExplorer</a> </b><br><br>
 	<table>
 	<tr><td>
@@ -166,7 +214,7 @@
 	
 	<br>
     <span style='width:110px; display: inline-block;'>Amount:</span> 
-	<input style='width:165px;' type="text" value="50000.00000000" id="amount"/><span style='width:50px; display: inline-block;'>&nbsp;qora</span><span style='width:40px; display: inline-block;'>Fee:</span><input style='width:100px;' type="text" value="1.00000000" id="fee"/><span style='width:40px; display: inline-block;'>&nbsp;qora</span>
+	<input style='width:165px;' type="text" value="0.00000000" id="amount"/><span style='width:50px; display: inline-block;'>&nbsp;qora</span><span style='width:40px; display: inline-block;'>Fee:</span><input style='width:100px;' type="text" value="1.00000000" id="fee"/><span style='width:40px; display: inline-block;'>&nbsp;qora</span>
 	
 	<br><br>
 	<span style='width:110px; display: inline-block;'>Timestamp:</span> <input style='width:122px;' type="text" value="" id="timestamp"/><span style='width:80px; display: inline-block;'>&nbsp;DateTime:</span><input style='width:153px; background-color : #f1f1f1;' readonly type="text" value="" id="datetime"/><input  style='width:45px;' type="button" value="Now" OnClick="doNowTime()"/><br>
@@ -175,12 +223,12 @@
 	<input  style='width:515px;' type="button" value="Generate Transaction" OnClick="doPaymentTransaction()"/><br>
 
 
-	<textarea style='width:515px; height: 100px;' id=txRaw></textarea><br>	
+	<textarea style='width:515px; height: 115px;' id=txRaw></textarea><br>	
 
-	<span style='width:110px; display: inline-block;'>&nbsp;&nbsp;via node:</span> <input style='width:400px;' type="text" value="http://mirror.qora.co.in:9090" id="nodeUrl"/><br>
+	<span style='width:110px; display: inline-block;'>&nbsp;&nbsp;via node:</span> <input style='width:400px;' type="text" value="" id="nodeUrl"/><br>
 	<input  style='width:515px;' type="button" value="Process" OnClick="doProcess()"/><br><br>
 	Result:<br>
-	<textarea style='width:515px; height: 100px;' id=output></textarea><br>	
+	<textarea style='width:515px; height: 115px;' id=output></textarea><br>	
 
 	<br>
 	</table>
