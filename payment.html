@@ -11,6 +11,17 @@
 	<script src="menu.js" charset="utf-8"></script>
 </head>
 
+<style>
+
+.readonly {
+	background-color: #f1f1f1; 
+	border: 1px groove; 
+	margin: 0px; 
+	padding: 2px;
+}
+
+</style>
+
 <script type="text/javascript">
 
 	var nodeUrl = 'http://mirror.qora.co.in:9090';
@@ -48,7 +59,8 @@
 	}
 
 	var casheBase58addressSeed = '';
-	var casheBase58AccountAddress = '';
+	var casheBase58SenderAccountAddress = '';
+	var casheBase58RecipientAccountAddress = '';
 	var casheTimestamp = '';
 	var casheFee = '';
 	var casheAmount = '';
@@ -73,11 +85,18 @@
 		
 		}
 		
-		var base58AccountAddress = $('#base58SenderAccountAddress').val();
+		var base58SenderAccountAddress = $('#base58SenderAccountAddress').val();
 
-		if ((base58AccountAddress != '') && (casheBase58AccountAddress != base58AccountAddress)) {
-			casheBase58AccountAddress = base58AccountAddress;
-			doLoadBalance();
+		if ((base58SenderAccountAddress != '') && (casheBase58SenderAccountAddress != base58SenderAccountAddress)) {
+			casheBase58SenderAccountAddress = base58SenderAccountAddress;
+			doLoadBalance(base58SenderAccountAddress, $('#senderBalance'));
+		}
+		
+		var base58RecipientAccountAddress = $('#base58RecipientAccountAddress').val();
+
+		if ((base58RecipientAccountAddress != '') && (casheBase58RecipientAccountAddress != base58RecipientAccountAddress)) {
+			casheBase58RecipientAccountAddress = base58RecipientAccountAddress;
+			doLoadBalance(base58RecipientAccountAddress, $('#recipientBalance'));
 		}
 		
 		var timestamp = $('#timestamp').val();
@@ -116,12 +135,10 @@
 		}
 	}
 
-	function doLoadBalance()
+	function doLoadBalance(base58SenderAccountAddress, elementAccountbalance)
 	{
-		var base58SenderAccountAddress = $('#base58SenderAccountAddress').val();
-
 		if(base58SenderAccountAddress == '') {
-			$("#balance").val('');
+			elementAccountbalance.val('');
 			return;
 		}
 		
@@ -132,12 +149,12 @@
 				
 				if(data.type == 'success'){
 					var balanceOfAccount = data.result;
-					$('#balance').val(addCommas(balanceOfAccount));
+					elementAccountbalance.val(addCommas(balanceOfAccount));
 				}
 				
 				if(data.type == 'apicallerror'){
 					$("#output").val(parseError(data.errordetail));
-					$('#balance').val('');
+					elementAccountbalance.val('');
 				}
 				
 			})
@@ -317,18 +334,19 @@
 	<b>Sender:</b><br>
     <span style='width:110px; display: inline-block;'>Account Seed:</span> <input autofocus style='width:400px;' type="text" value="" id="base58SenderAccountSeed"/><br>
     <span style='width:110px; display: inline-block;'>Account addr:</span> <input style='width:400px;' type="text" value="" id="base58SenderAccountAddress"/><br>
-    <span style='width:110px; display: inline-block;'>Balance:</span> <input style='width:360px; background-color : #f1f1f1;' readonly  type="text" value="" id="balance"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span><br>
-	<span style='width:110px; display: inline-block;'>Reference:</span> <input style='width:360px;' type="text" value="" id="base58LastReferenceOfAccount"/><input  style='width:40px;' type="button" value="Get" OnClick="doLoadLastReference()"/><br>
+    <span style='width:110px; display: inline-block;'>Balance:</span> <input style='width:360px;' class='readonly' readonly  type="text" value="" id="senderBalance"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span><br>
+	<span style='width:110px; display: inline-block;'>Reference:</span> <input style='width:360px;' type="text" value="" id="base58LastReferenceOfAccount"/><input  style='width:40px; padding: 1px;' type="button" value="Get" OnClick="doLoadLastReference()"/><br>
 
     <br><b>Recipient:</b><br>
     <span style='width:110px; display: inline-block;'>Account addr:</span> <input style='width:400px;' type="text" value="" id="base58RecipientAccountAddress"/><br>
-	
+    <span style='width:110px; display: inline-block;'>Balance:</span> <input style='width:360px;' class='readonly' readonly  type="text" value="" id="recipientBalance"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span><br>
+
 	<br>
     <span style='width:110px; display: inline-block;'>Amount:</span> 
-	<input style='width:165px;' type="text" value="0.00000000" id="amount"/><span style='width:50px; display: inline-block;'>&nbsp;Qora</span><span style='width:40px; display: inline-block;'>Fee:</span><input style='width:100px;' type="text" value="1.00000000" id="fee"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span>
+	<input style='width:165px;' type="text" value="0.00000000" id="amount"/><span style='width:50px; display: inline-block;'>&nbsp;Qora</span><span style='width:40px; display: inline-block;'>&nbsp;Fee:</span><input style='width:105px;' type="text" value="1.00000000" id="fee"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span>
 	
 	<br><br>
-	<span style='width:110px; display: inline-block;'>Timestamp:</span> <input style='width:122px;' type="text" value="" id="timestamp"/><span style='width:80px; display: inline-block;'>&nbsp;DateTime:</span><input style='width:153px; background-color : #f1f1f1;' readonly type="text" value="" id="datetime"/><input  style='width:45px;' type="button" value="Now" OnClick="doNowTime()"/><br>
+	<span style='width:110px; display: inline-block;'>Timestamp:</span> <input style='width:122px;' type="text" value="" id="timestamp"/><span style='width:80px; display: inline-block;'>&nbsp;DateTime:</span><input style='width:158px;' class='readonly' readonly type="text" value="" id="datetime"/><input  style='width:40px; padding: 1px;' type="button" value="Now" OnClick="doNowTime()"/><br>
 
 	<br><br>
 	<input  style='width:515px;' type="button" value="Generate Transaction" OnClick="doPaymentTransaction()"/><br>
