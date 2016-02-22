@@ -1,5 +1,31 @@
 // QORA
 
+const TYPES = {
+	GENESIS_TRANSACTION: 1,
+	PAYMENT_TRANSACTION: 2,
+	
+	REGISTER_NAME_TRANSACTION: 3,
+	UPDATE_NAME_TRANSACTION: 4,
+	SELL_NAME_TRANSACTION: 5,
+	CANCEL_SELL_NAME_TRANSACTION: 6,
+	BUY_NAME_TRANSACTION: 7,
+	
+	CREATE_POLL_TRANSACTION: 8,
+	VOTE_ON_POLL_TRANSACTION: 9,
+	
+	ARBITRARY_TRANSACTION: 10,
+	
+	ISSUE_ASSET_TRANSACTION: 11,
+	TRANSFER_ASSET_TRANSACTION: 12,
+	CREATE_ORDER_TRANSACTION: 13,
+	CANCEL_ORDER_TRANSACTION: 14,
+	MULTI_PAYMENT_TRANSACTION: 15,
+
+	DEPLOY_AT_TRANSACTION: 16,
+	
+	MESSAGE_TRANSACTION: 17
+};
+
 function getKeyPairFromSeed(seed, returnBase58)
 {
 	if(typeof(seed) == "string") {
@@ -99,62 +125,32 @@ function getAccountAddressFromPublicKey(publicKey)
 	return Base58.encode(new Uint8Array(addressArray));
 }
 
-function generateSignaturePaymentTransaction(keyPair, lastReference, recipient, amount, fee, timestamp)
-{
-	var PAYMENT_TRANSACTION = 2;
-	
-	data = [];
-	typeBytes = wordToBytes(PAYMENT_TRANSACTION);
-	data = data.concat(typeBytes);
-
-	timestampBytes = int64ToBytes(timestamp);
-	data = data.concat(timestampBytes);
-	
-	data = data.concat(Array.prototype.slice.call(lastReference));
-	
-	data = data.concat(Array.prototype.slice.call(keyPair.publicKey));
-
-	data = data.concat(Array.prototype.slice.call(recipient));
-	
-	amountBytes = int64ToBytes(amount*100000000);
-	data = data.concat(amountBytes);
-
-	feeBytes = int64ToBytes(fee*100000000);
-	data = data.concat(feeBytes);
-	
-	var signature = nacl.sign.detached(new Uint8Array(data), keyPair.privateKey);
-    
-	return signature;
+function generateSignaturePaymentTransaction(keyPair, lastReference, recipient, amount, fee, timestamp) {
+	const data = generatePaymentTransactionBase(keyPair, lastReference, recipient, amount, fee, timestamp);
+	return nacl.sign.detached(new Uint8Array(data), keyPair.privateKey);
 }
 
-function generatePaymentTransaction(keyPair, lastReference, recipient, amount, fee, timestamp, signature)
-{
-	var PAYMENT_TRANSACTION = 2;
-	
-	data = [];
-	typeBytes = wordToBytes(PAYMENT_TRANSACTION);
-	data = data.concat(typeBytes);
+function generatePaymentTransaction(keyPair, lastReference, recipient, amount, fee, timestamp, signature) {
+	return generatePaymentTransactionBase(keyPair, lastReference, recipient, amount, fee, timestamp)
+		.concat(Array.prototype.slice.call(signature));
+}
 
-	timestampBytes = int64ToBytes(timestamp);
-	data = data.concat(timestampBytes);
-	
-	data = data.concat(Array.prototype.slice.call(lastReference));
-	
-	data = data.concat(Array.prototype.slice.call(keyPair.publicKey));
+function generatePaymentTransactionBase(keyPair, lastReference, recipient, amount, fee, timestamp) {
+	var data = [];
+	const txType = TYPES.PAYMENT_TRANSACTION;
+	const typeBytes = wordToBytes(txType);
+	const timestampBytes = int64ToBytes(timestamp);
+	const amountBytes = int64ToBytes(amount * 100000000);
+	const feeBytes = int64ToBytes(fee * 100000000);
 
-	data = data.concat(Array.prototype.slice.call(recipient));
-	
-	amountBytes = int64ToBytes(amount*100000000);
-	data = data.concat(amountBytes);
-
-	feeBytes = int64ToBytes(fee*100000000);
-	data = data.concat(feeBytes);
-	
-	data = data.concat(Array.prototype.slice.call(signature));
-	
-	//Signeddata =  Array.prototype.slice.call(new Int8Array(data));
-	
-	return data;
+	return data
+		.concat(typeBytes)
+		.concat(timestampBytes)
+		.concat(Array.prototype.slice.call(lastReference))
+		.concat(Array.prototype.slice.call(keyPair.publicKey))
+		.concat(Array.prototype.slice.call(recipient))
+		.concat(amountBytes)
+		.concat(feeBytes);
 }
 
 
