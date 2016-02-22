@@ -147,6 +147,9 @@
 							case "34":
 								$("#output").val('INVALID_PAYMENTS_LENGTH');
 								break
+							case "40":
+								$("#output").val('FEE_LESS_REQUIRED');
+								break
 							case "41":
 								$("#output").val('INVALID_RAW_DATA');
 								break
