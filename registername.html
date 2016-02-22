@@ -1,6 +1,6 @@
 <html style='height:100%'>
 <head>
-	<title>Qora ArbitraryTransaction Processor</title>
+	<title>Qora RegisterName Processor</title>
 	<script src="jquery-2.2.0.js"></script>
 	<script src="nacl-fast.js" charset="utf-8"></script>
 	<script src="Base58.js" charset="utf-8"></script>
@@ -22,8 +22,7 @@
 	var casheBase58SenderAccountAddress = '';
 	var casheTimestamp = '';
 	var casheFee = '';
-	var casheService = '';
-
+	var casheNameStr = '';
 	
 	function doUpdate() 
 	{
@@ -44,11 +43,20 @@
 		
 		}
 		
+		
+		
 		var base58SenderAccountAddress = $('#base58SenderAccountAddress').val();
 
 		if ((base58SenderAccountAddress != '') && (casheBase58SenderAccountAddress != base58SenderAccountAddress)) {
 			casheBase58SenderAccountAddress = base58SenderAccountAddress;
 			doLoadBalance(base58SenderAccountAddress, $('#senderBalance'));
+		}
+		
+		var nameStr = $('#nameStr').val();
+
+		if ((nameStr != '') && (casheNameStr != nameStr)) {
+			casheNameStr = nameStr;
+			doLoadInfoForName(nameStr, $('#nameInfo'));
 		}
 		
 		var timestamp = $('#timestamp').val();
@@ -75,19 +83,10 @@
 			}
 			casheFee = $('#fee').val();
 		}
-		
-		if($('#service').val() != casheService) {
-			var caretPosition = getTextCursorPosition($('#service'))
-			var removeCommasBuf = removeAllexceptNumbers($('#service').val());
-			if(removeCommasBuf != $('#service').val()) {
-				$('#service').val(removeCommasBuf);
-				setTextCursorPosition($('#service'), caretPosition - 1);
-			}
-			casheService = $('#service').val();
-		}
+
 	}
 
-	function doArbitraryTransactionV3() {
+	function doRegisterNameTransaction() {
 	
 		var base58SenderAccountSeed = document.getElementById('base58SenderAccountSeed').value;
 		
@@ -127,34 +126,30 @@
 			return;
 		}
 		
-		var arbitraryData;
-		
-		if($("#encoding").val() == 'Base58') {
-			try {
-				arbitraryData = Base58.decode($("#data").val());
-			} catch (e) {
-				$("#output").val("invalid Base58 Data!");
-				return;
-			}
-		} else {
-			arbitraryData = new Uint8Array(toUTF8Array($("#data").val()));
-		}
+		var nameBytes = new Uint8Array(toUTF8Array($("#nameStr").val()));
+		var valueBytes = new Uint8Array(toUTF8Array($("#valueStr").val()));
+		var owner = Base58.decode(base58SenderAccountAddress);
 		
 		var fee = parseFloat($('#fee').val());
 		var timestamp = parseInt($('#timestamp').val());
-		var service = parseInt($('#service').val());
+		
+		signature = generateSignatureRegisterNameTransaction(keyPair, base58LastReferenceOfAccount, owner, nameBytes, valueBytes, fee, timestamp);
 
-		signature = generateSignatureArbitraryTransactionV3(keyPair, base58LastReferenceOfAccount, service, arbitraryData, fee, timestamp);
+		registerNameTransactionRaw = generateRegisterNameTransaction(keyPair, base58LastReferenceOfAccount, owner, nameBytes, valueBytes, fee, timestamp, signature);
 
-		arbitraryTransactionV3Raw = generateArbitraryTransactionV3(keyPair, base58LastReferenceOfAccount, service, arbitraryData, fee, timestamp, signature);
-
-		$("#txRaw").val(Base58.encode(new Uint8Array(arbitraryTransactionV3Raw)));
+		$("#txRaw").val(Base58.encode(new Uint8Array(registerNameTransactionRaw)));
 	}
 
 	function onLoad()
 	{
 		$("#nodeUrl").val(nodeUrl);
 		setInterval(doUpdate, 300);
+		
+		$("#base58SenderAccountSeed").val("3dnubGUuxK5oLhURK4WLtFL7rWgSKCj5MJc48AKD6FdD");
+		$("#timestamp").val("1455849866776");
+		$("#base58LastReferenceOfAccount").val("YWv9Gyi2xxEyEe6ztrGGuAPhmUD86s7h8CANQAcmsxdeS3pU5BvQKnbeyXjnXXd8HgLaDvYBBz6im3dDYTR817F");
+		$("#nameStr").val("проверкаимени");
+		$("#valueStr").val("Проверка значения");
 	}
 	
 	
@@ -173,17 +168,19 @@
 	<span style='width:110px; display: inline-block;'>Reference:</span> <input style='width:360px;' type="text" value="" id="base58LastReferenceOfAccount"/><input  style='width:40px; padding: 1px;' type="button" value="Get" OnClick="doLoadLastReference()"/><br>
 	<span style='width:110px; display: inline-block;'>Timestamp:</span> <input style='width:122px;' type="text" value="" id="timestamp"><span style='width:80px; display: inline-block;'>&nbsp;DateTime:</span><input style='width:158px;' class='readonly' readonly type="text" value="" id="datetime"/><input  style='width:40px; padding: 1px;' type="button" value="Now" OnClick="doNowTime()"/><br>
 	
-	<span style='width:110px; display: inline-block;'>Service:</span> <input style='width:122px;' type="text" value="0" id="service"><span style='width:80px; display: inline-block; text-align: right;'>&nbsp;Fee:&nbsp;</span><input style='width:158px;' type="text" value="1.00000000" id="fee"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span>
+	<span style='width:110px; display: inline-block;'>Fee:&nbsp;</span> <input style='width:122px;' type="text" value="1.00000000" id="fee"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span>
 
 	<br><br>
-	<span style='width:110px; display: inline-block;'><b>Data:</b></span>
-	<span style='width:260px; display: inline-block; text-align: right;'>Encoding:</span>
-	<select style='width:136px;' id='encoding'><option>Text</option><option>Base58</option></select><br>
 	
-	<textarea style='width:515px; height: 115px;' id=data></textarea><br>	
+	<span style='width:110px; display: inline-block;'>Name:</span> <input style='width:400px;' type="text" value="" id="nameStr"/><br>
+    <span style='width:110px; display: inline-block;'>Info:</span> <input style='width:400px;' class='readonly' readonly  type="text" value="" id="nameInfo"/>
+	<br>
+	<span style='width:110px; display: inline-block;'><b>Value:</b></span><br>
+	
+	<textarea style='width:515px; height: 115px;' id=valueStr></textarea><br>	
 	
 	<br><br>
-	<input  style='width:515px;' type="button" value="Generate Transaction" OnClick="doArbitraryTransactionV3()"/><br>
+	<input  style='width:515px;' type="button" value="Generate Transaction" OnClick="doRegisterNameTransaction()"/><br>
 
 
 	<textarea style='width:515px; height: 115px;' id=txRaw></textarea><br>	

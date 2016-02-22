@@ -187,8 +187,42 @@ function generateArbitraryTransactionV3Base(publicKey, lastReference, service, a
 }
 
 
+function generateSignatureRegisterNameTransaction(keyPair, lastReference, owner, name, value, fee, timestamp) {
+	const data = generateRegisterNameTransactionBase(keyPair.publicKey, lastReference, owner, name, value, fee, timestamp);
+	
+	console.log(Base58.encode(new Uint8Array(data)));
+	dat1 = Array.prototype.slice.call(new Int8Array(data))
+	console.log(dat1);
 
+	return nacl.sign.detached(new Uint8Array(data), keyPair.privateKey);
+}
 
+function generateRegisterNameTransaction(keyPair, lastReference, owner, name, value, fee, timestamp, signature) {
+	return generateRegisterNameTransactionBase(keyPair.publicKey, lastReference, owner, name, value, fee, timestamp)
+		.concat(Array.prototype.slice.call(signature));
+}
+
+function generateRegisterNameTransactionBase(publicKey, lastReference, owner, name, value, fee, timestamp) {
+	var data = [];
+	const txType = TYPES.REGISTER_NAME_TRANSACTION;
+	const typeBytes = wordToBytes(txType);
+	const timestampBytes = int64ToBytes(timestamp);
+	const feeBytes = int64ToBytes(fee * 100000000);
+	const nameSizeBytes = wordToBytes(name.length);
+	const valueSizeBytes = wordToBytes(value.length);
+	
+	return data
+		.concat(typeBytes)
+		.concat(timestampBytes)
+		.concat(Array.prototype.slice.call(lastReference))
+		.concat(Array.prototype.slice.call(publicKey))
+		.concat(Array.prototype.slice.call(owner))
+		.concat(nameSizeBytes)
+		.concat(Array.prototype.slice.call(name))
+		.concat(valueSizeBytes)
+		.concat(Array.prototype.slice.call(value))
+		.concat(feeBytes);
+}
 
 
 

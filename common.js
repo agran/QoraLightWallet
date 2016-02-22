@@ -8,6 +8,7 @@
 		+ '<a href=brainwallet.html>BrainWallet</a> | '
 		+ '<a href=payment.html>Payment</a> | '
 		+ '<a href=arbitrarytransaction.html>ArbitraryTransaction</a> | '
+		+ '<a href=registername.html>RegisterName</a> | '
 		+ '<a href=http://mirror.qora.co.in:9090/index/blockexplorer.html>BlockExplorer</a>'
 		+ '</b><br><br>');
 		
@@ -44,6 +45,42 @@
 			});
 	}
 
+	function doLoadInfoForName(name, elementNameInfo)
+	{
+		if(name == '') {
+			elementNameInfo.val('');
+			return;
+		}
+		
+		if( name.toLowerCase() != name ) {
+			elementNameInfo.val('You must use lowercase letters.');
+			return;
+		}
+		
+		var nodeUrl = $("#nodeUrl").val();
+
+		$.post( nodeUrl + "/index/api.html", { type: "get", apiurl: "/names/" + encodeURIComponent(name) } )
+			.done(function( data ) {
+				
+				if(data.type == 'success'){
+					var info = JSON.parse(data.result);
+					elementNameInfo.val("Registered by " + info.owner);
+				}
+				
+				if(data.type == 'apicallerror'){
+					if(parseError(data.errordetail) == 'name does not exist') {
+						elementNameInfo.val('Name is free. You can register it.');
+					} else {
+						elementNameInfo.val(parseError(data.errordetail));
+					}
+				}
+				
+			})
+			.fail(function() {
+				$("#output").val( "error" );
+			});
+	}	
+	
 	function doNowTime()
 	{
 		var date = new Date();
@@ -138,8 +175,20 @@
 							case "6":
 								$("#output").val('INVALID_REFERENCE');
 								break
+							case "7":
+								$("#output").val('INVALID_NAME_LENGTH');
+								break
+							case "8":
+								$("#output").val('INVALID_VALUE_LENGTH');
+								break
+							case "9":
+								$("#output").val('NAME_ALREADY_REGISTRED');
+								break
 							case "15":
 								$("#output").val('INVALID_AMOUNT');
+								break
+							case "17":
+								$("#output").val('NAME_NOT_LOWER_CASE');
 								break
 							case "27":
 								$("#output").val('INVALID_DATA_LENGTH');
