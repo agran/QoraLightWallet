@@ -47,27 +47,102 @@
 	}
 
 	var casheBase58addressSeed = '';
+	var casheBase58AccountAddress = '';
+	var casheTimestamp = '';
+	var casheFee = '';
+	var casheAmount = '';
+
 	
-	function doSenderAccountAddressFromSenderSeed() 
+	function doUpdate() 
 	{
 		var base58addressSeed = $('#base58SenderAccountSeed').val();
-		
-		if(base58addressSeed == '' || casheBase58addressSeed == base58addressSeed) {
-			return;
-		} else {
+
+		if ((base58addressSeed != '') && (casheBase58addressSeed != base58addressSeed)) {
 			casheBase58addressSeed = base58addressSeed;
+			if (Base58.decode(base58addressSeed).length == 32) {
+				keyPair = getKeyPairFromSeed(base58addressSeed, false);
+				
+				var base58SenderAccountAddress = getAccountAddressFromPublicKey(keyPair.publicKey);
+				
+				$('#base58SenderAccountAddress').val(base58SenderAccountAddress);	
+				
+			} else {
+				$('#base58SenderAccountAddress').val('');
+			}
+		
 		}
 		
-		if(Base58.decode(base58addressSeed).length != 32) {
-			$('#base58SenderAccountAddress').val('');
+		var base58AccountAddress = $('#base58SenderAccountAddress').val();
+
+		if ((base58AccountAddress != '') && (casheBase58AccountAddress != base58AccountAddress)) {
+			casheBase58AccountAddress = base58AccountAddress;
+			doLoadBalance();
+		}
+		
+		var timestamp = $('#timestamp').val();
+				
+		if (!(timestamp == '' || casheTimestamp == timestamp)) {
+			casheTimestamp = timestamp;
+			
+			if (! isNaN(casheTimestamp)) {
+
+				var date = new Date(parseInt(casheTimestamp));
+				$('#datetime').val(date.toLocaleDateString() + ' ' + date.toLocaleTimeString());
+				
+			} else {
+				$('#datetime').val('');
+			}
+		}
+		
+		if($('#fee').val() != casheFee) {
+			var caretPosition = getTextCursorPosition($('#fee'))
+			var removeCommasBuf = removeCommas($('#fee').val());
+			if(removeCommasBuf != $('#fee').val()) {
+				$('#fee').val(removeCommasBuf);
+				setTextCursorPosition($('#fee'), caretPosition - 1);
+			}
+			casheFee = $('#fee').val();
+		}
+		
+		if($('#amount').val() != casheAmount) {
+			var caretPosition = getTextCursorPosition($('#amount'))
+			var removeCommasBuf = removeCommas($('#amount').val());
+			if(removeCommasBuf != $('#amount').val()) {
+				$('#amount').val(removeCommasBuf);
+				setTextCursorPosition($('#amount'), caretPosition - 1);
+			}
+			casheAmount = $('#amount').val();
+		}
+	}
+
+	function doLoadBalance()
+	{
+		var base58SenderAccountAddress = $('#base58SenderAccountAddress').val();
+
+		if(base58SenderAccountAddress == '') {
+			$("#balance").val('');
 			return;
 		}
 		
-		keyPair = getKeyPairFromSeed(base58addressSeed, false);
-		
-		var base58SenderAccountAddress = getAccountAddressFromPublicKey(keyPair.publicKey);
-		
-		$('#base58SenderAccountAddress').val(base58SenderAccountAddress);
+		var nodeUrl = $("#nodeUrl").val();
+
+		$.post( nodeUrl + "/index/api.html", { type: "get", apiurl: "/addresses/balance/" + base58SenderAccountAddress } )
+			.done(function( data ) {
+				
+				if(data.type == 'success'){
+					var balanceOfAccount = data.result;
+					$('#balance').val(addCommas(balanceOfAccount));
+				}
+				
+				if(data.type == 'apicallerror'){
+					$("#output").val(parseError(data.errordetail));
+					$('#balance').val('');
+				}
+				
+			})
+			.fail(function() {
+				$("#output").val( "error" );
+			});
 	}
 	
 	function doNowTime()
@@ -188,10 +263,45 @@
 			});
 	}
 	
+	function parseError(error) 
+	{
+		try {
+			var error = JSON.parse(error);
+			message = error.message;
+		} catch (e) {
+			message = error;
+		}
+		return message;
+	}
+
+	function addCommas(str)
+	{
+		strbuf = str.toString();
+		if( strbuf.indexOf('.') == -1)
+		{
+			return strbuf.replace(/(\d)(?=(\d\d\d)+([^\d]|$))/g, '$1,');
+		}
+		return strbuf.replace(/(\d)(?=(\d\d\d)+([^\d]))/g, '$1,');
+	}
+
+	function removeCommas(str)
+	{
+		return str.replace(/[^.0-9]/g,"");
+	}
+	
+	function getTextCursorPosition(ele) {   
+		return ele.prop("selectionStart");
+	}
+
+	function setTextCursorPosition(ele, pos) {
+		ele.prop("selectionStart", pos);
+		ele.prop("selectionEnd", pos);
+	}
+	
 	function onLoad()
 	{
 		$("#nodeUrl").val(nodeUrl);
-		setInterval(doSenderAccountAddressFromSenderSeed, 300);
+		setInterval(doUpdate, 300);
 	}
 	
 	
@@ -207,6 +317,7 @@
 	<b>Sender:</b><br>
     <span style='width:110px; display: inline-block;'>Account Seed:</span> <input autofocus style='width:400px;' type="text" value="" id="base58SenderAccountSeed"/><br>
     <span style='width:110px; display: inline-block;'>Account addr:</span> <input style='width:400px;' type="text" value="" id="base58SenderAccountAddress"/><br>
+    <span style='width:110px; display: inline-block;'>Balance:</span> <input style='width:360px; background-color : #f1f1f1;' readonly  type="text" value="" id="balance"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span><br>
 	<span style='width:110px; display: inline-block;'>Reference:</span> <input style='width:360px;' type="text" value="" id="base58LastReferenceOfAccount"/><input  style='width:40px;' type="button" value="Get" OnClick="doLoadLastReference()"/><br>
 
     <br><b>Recipient:</b><br>
@@ -214,7 +325,7 @@
 	
 	<br>
     <span style='width:110px; display: inline-block;'>Amount:</span> 
-	<input style='width:165px;' type="text" value="0.00000000" id="amount"/><span style='width:50px; display: inline-block;'>&nbsp;qora</span><span style='width:40px; display: inline-block;'>Fee:</span><input style='width:100px;' type="text" value="1.00000000" id="fee"/><span style='width:40px; display: inline-block;'>&nbsp;qora</span>
+	<input style='width:165px;' type="text" value="0.00000000" id="amount"/><span style='width:50px; display: inline-block;'>&nbsp;Qora</span><span style='width:40px; display: inline-block;'>Fee:</span><input style='width:100px;' type="text" value="1.00000000" id="fee"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span>
 	
 	<br><br>
 	<span style='width:110px; display: inline-block;'>Timestamp:</span> <input style='width:122px;' type="text" value="" id="timestamp"/><span style='width:80px; display: inline-block;'>&nbsp;DateTime:</span><input style='width:153px; background-color : #f1f1f1;' readonly type="text" value="" id="datetime"/><input  style='width:45px;' type="button" value="Now" OnClick="doNowTime()"/><br>
