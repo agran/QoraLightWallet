@@ -145,11 +145,13 @@
 		$("#nodeUrl").val(nodeUrl);
 		setInterval(doUpdate, 300);
 		
-		$("#base58SenderAccountSeed").val("3dnubGUuxK5oLhURK4WLtFL7rWgSKCj5MJc48AKD6FdD");
-		$("#timestamp").val("1455849866776");
-		$("#base58LastReferenceOfAccount").val("YWv9Gyi2xxEyEe6ztrGGuAPhmUD86s7h8CANQAcmsxdeS3pU5BvQKnbeyXjnXXd8HgLaDvYBBz6im3dDYTR817F");
-		$("#nameStr").val("проверкаимени");
-		$("#valueStr").val("Проверка значения");
+		if(fasle) {
+			$("#base58SenderAccountSeed").val("3dnubGUuxK5oLhURK4WLtFL7rWgSKCj5MJc48AKD6FdD");
+			$("#timestamp").val("1455849866776");
+			$("#base58LastReferenceOfAccount").val("YWv9Gyi2xxEyEe6ztrGGuAPhmUD86s7h8CANQAcmsxdeS3pU5BvQKnbeyXjnXXd8HgLaDvYBBz6im3dDYTR817F");
+			$("#nameStr").val("проверкаимени");
+			$("#valueStr").val("Проверка значения");
+		}
 	}
 	
 	
