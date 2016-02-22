@@ -126,16 +126,16 @@ function getAccountAddressFromPublicKey(publicKey)
 }
 
 function generateSignaturePaymentTransaction(keyPair, lastReference, recipient, amount, fee, timestamp) {
-	const data = generatePaymentTransactionBase(keyPair, lastReference, recipient, amount, fee, timestamp);
+	const data = generatePaymentTransactionBase(keyPair.publicKey, lastReference, recipient, amount, fee, timestamp);
 	return nacl.sign.detached(new Uint8Array(data), keyPair.privateKey);
 }
 
 function generatePaymentTransaction(keyPair, lastReference, recipient, amount, fee, timestamp, signature) {
-	return generatePaymentTransactionBase(keyPair, lastReference, recipient, amount, fee, timestamp)
+	return generatePaymentTransactionBase(keyPair.publicKey, lastReference, recipient, amount, fee, timestamp)
 		.concat(Array.prototype.slice.call(signature));
 }
 
-function generatePaymentTransactionBase(keyPair, lastReference, recipient, amount, fee, timestamp) {
+function generatePaymentTransactionBase(publicKey, lastReference, recipient, amount, fee, timestamp) {
 	var data = [];
 	const txType = TYPES.PAYMENT_TRANSACTION;
 	const typeBytes = wordToBytes(txType);
@@ -147,11 +147,45 @@ function generatePaymentTransactionBase(keyPair, lastReference, recipient, amoun
 		.concat(typeBytes)
 		.concat(timestampBytes)
 		.concat(Array.prototype.slice.call(lastReference))
-		.concat(Array.prototype.slice.call(keyPair.publicKey))
+		.concat(Array.prototype.slice.call(publicKey))
 		.concat(Array.prototype.slice.call(recipient))
 		.concat(amountBytes)
 		.concat(feeBytes);
 }
+
+function generateSignatureArbitraryTransactionV3(keyPair, lastReference, service, arbitraryData, fee, timestamp) {
+	const data = generateArbitraryTransactionV3Base(keyPair.publicKey, lastReference, service, arbitraryData, fee, timestamp);
+	return nacl.sign.detached(new Uint8Array(data), keyPair.privateKey);
+}
+
+function generateArbitraryTransactionV3(keyPair, lastReference, service, arbitraryData, fee, timestamp, signature) {
+	return generateArbitraryTransactionV3Base(keyPair.publicKey, lastReference, service, arbitraryData, fee, timestamp)
+		.concat(Array.prototype.slice.call(signature));
+}
+
+function generateArbitraryTransactionV3Base(publicKey, lastReference, service, arbitraryData, fee, timestamp) {
+	var data = [];
+	const txType = TYPES.ARBITRARY_TRANSACTION;
+	const typeBytes = wordToBytes(txType);
+	const timestampBytes = int64ToBytes(timestamp);
+	const feeBytes = int64ToBytes(fee * 100000000);
+	const serviceBytes = wordToBytes(service);
+	const dataSizeBytes = wordToBytes(arbitraryData.length);
+	const paymentsLengthBytes = wordToBytes(0);  // Support payments - not yet.
+	
+	return data
+		.concat(typeBytes)
+		.concat(timestampBytes)
+		.concat(Array.prototype.slice.call(lastReference))
+		.concat(Array.prototype.slice.call(publicKey))
+		.concat(paymentsLengthBytes)
+		// Here it is necessary to insert the payments, if there are
+		.concat(serviceBytes)
+		.concat(dataSizeBytes)
+		.concat(Array.prototype.slice.call(arbitraryData))
+		.concat(feeBytes);
+}
+
 
 
 

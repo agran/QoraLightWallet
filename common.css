@@ -1,0 +1,9 @@
+.nowrap {
+white-spaceЙ: pre-wrap
+}
+.readonly {
+	background-color: #f1f1f1; 
+	border: 1px groove; 
+	margin: 0px; 
+	padding: 2px;
+}

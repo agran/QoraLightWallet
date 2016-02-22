@@ -2,13 +2,14 @@
 <head>
 	<title>Qora Brain Wallet</title>
 	<script src="jquery-2.2.0.js"></script>
-	<link href="bootstrap.css" rel="stylesheet">
 	<script src="nacl-fast.js" charset="utf-8"></script>
 	<script src="Base58.js" charset="utf-8"></script>
 	<script src="sha256.js" charset="utf-8"></script>
 	<script src="ripemd160.js" charset="utf-8"></script>
 	<script src="qora.js" charset="utf-8"></script>
-	<script src="menu.js" charset="utf-8"></script>
+	<script src="common.js" charset="utf-8"></script>
+	<link href="bootstrap.css" rel="stylesheet">
+	<link href="common.css" rel="stylesheet">
 </head>
 
 <script type="text/javascript">
@@ -120,24 +121,24 @@
 	<table>
 	<tr><td>
 	Brain Wallet Passphrase:<br>
-	<input style='width:485px;' type="text" class="enter" size=60 value="" autofocus id="brainWalletPassphrase"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doBrain()"/><br><br>
+	<input style='width:485px;' type="text" size=60 value="" autofocus id="brainWalletPassphrase"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doBrain()"/><br><br>
 
 	Base Seed:<br>
-	<input style='width:485px;' type="text" class="enter" size=60 value="" id="base58BaseSeed"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doAccounts()"/><br><br>
-	Count: <input type="text" class="enter" size=5 value="10" id="countAddrs"/><br>
+	<input style='width:485px;' type="text" size=60 value="" id="base58BaseSeed"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doAccounts()"/><br><br>
+	Count: <input type="text" size=5 value="10" id="countAddrs"/><br>
 	<br>
 	<div id="output"></div><br>
 
 	<b>Account:</b><br>
-    <span style='width:80px; display: inline-block;'>Seed:</span> <input style='width:400px;' type="text" class="enter" value="" id="base58AccountSeed"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doAccountFromSeed()"/><br>
+    <span style='width:80px; display: inline-block;'>Seed:</span> <input style='width:400px;' type="text" value="" id="base58AccountSeed"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doAccountFromSeed()"/><br>
 
     <span style='width:80px; display: inline-block;'>privateKey:</span>
-	<input style='width:480px; background-color : #f1f1f1;' type="text" class="enter" value="" readonly id="base58AccountPrivateKey"/><br>
+	<input style='width:480px;' type="text" class="readonly" value="" readonly id="base58AccountPrivateKey"/><br>
 
 	<span style='width:80px; display: inline-block;'>publicKey:</span> 
-	<input style='width:400px;'  type="text" class="enter" value="" id="base58AccountPublicKey"/><input  style='width:80px;' type="button" value="Сonvert" OnClick="doAccountAddressFromPublicKey()"/><br>
+	<input style='width:400px;'  type="text" value="" id="base58AccountPublicKey"/><input  style='width:80px;' type="button" value="Сonvert" OnClick="doAccountAddressFromPublicKey()"/><br>
 	<span style='width:80px; display: inline-block;'>Address:</span>
-    <input style='width:480px; background-color : #f1f1f1;' type="text" class="enter" value="" readonly id="base58AccountAddress"/><br>
+    <input style='width:480px;' type="text" class="readonly" value="" readonly id="base58AccountAddress"/><br>
 	</table>
 	<br><br>
 	<div id='bottom'></div>
