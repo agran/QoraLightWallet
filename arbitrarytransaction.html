@@ -137,7 +137,7 @@
 				return;
 			}
 		} else {
-			arbitraryData = new Uint8Array(toUTF8Array($("#data").val()));
+			arbitraryData = stringtoUTF8Array($("#data").val());
 		}
 		
 		var fee = parseFloat($('#fee').val());
@@ -148,13 +148,33 @@
 
 		arbitraryTransactionV3Raw = generateArbitraryTransactionV3(keyPair, base58LastReferenceOfAccount, service, arbitraryData, fee, timestamp, signature);
 
-		$("#txRaw").val(Base58.encode(new Uint8Array(arbitraryTransactionV3Raw)));
+		$("#txRaw").val(Base58.encode(arbitraryTransactionV3Raw));
 	}
 
 	function onLoad()
 	{
 		$("#nodeUrl").val(nodeUrl);
 		setInterval(doUpdate, 300);
+		
+		if (/test/.test(window.location.hash)) {
+			$("#base58SenderAccountSeed").val("3dnubGUuxK5oLhURK4WLtFL7rWgSKCj5MJc48AKD6FdD");
+			$("#timestamp").val("1455849866776");
+			$("#base58LastReferenceOfAccount").val("YWv9Gyi2xxEyEe6ztrGGuAPhmUD86s7h8CANQAcmsxdeS3pU5BvQKnbeyXjnXXd8HgLaDvYBBz6im3dDYTR817F");
+			$("#data").val("{'postaфыва':'test'}");
+			$("#service").val("555");
+
+			
+			$("#output").val('1112RT1bWVqwdNEDfvWoyyhpQeyvBfVZGY9gZCzDdNoR9j2MXjfxnW9U8xrif9QWySYAL5nJwZA1M3d4afD677sC8c21ZpaVHzDzE4NrX4vJ9DVDSWhYsRsEGXjWLrLLBbAWko24hsUFo6Mpj6KWFJpbQNaw6K2sXCthwJvu5wfGZYY5CKxzawJFuWGLrcZ9rUfAAJwSgvHoZCTfA6HsatNwfKfbkUZa173WyizEiba3edq82nwKripWRszN7YCzLhCKmjU1XQCGCHkcjA1f9F4wVzYc8ohoQc7DZV');
+			
+			$("#generateTransaction").click();
+			
+			if($("#output").val() == $("#txRaw").val()) {
+				$("#txRaw").css({"color": "green"});
+			} else {
+				$("#txRaw").css({"color": "red"});
+			}
+			
+		}
 	}
 	
 	
@@ -162,11 +182,12 @@
 <body style="margin:4; padding:25" onload="onLoad()">
 	
 	<center>
-	<div style='height: 170px;' id='menu'></div>
+	<div style='height: 140px;' id='menu'></div>
+	<h3>Qora ArbitraryTransaction</h3>
 	<table class='nowrap'>
 	<tr><td>
 	
-	<b>Sender:</b><br>
+	<b>Creator:</b><br>
     <span style='width:110px; display: inline-block;'>Account Seed:</span> <input autofocus style='width:400px;' type="text" value="" id="base58SenderAccountSeed"/><br>
     <span style='width:110px; display: inline-block;'>Account addr:</span> <input style='width:400px;' type="text" value="" id="base58SenderAccountAddress"/><br>
     <span style='width:110px; display: inline-block;'>Balance:</span> <input style='width:360px;' class='readonly' readonly  type="text" value="" id="senderBalance"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span><br>
@@ -183,7 +204,7 @@
 	<textarea style='width:515px; height: 115px;' id=data></textarea><br>	
 	
 	<br><br>
-	<input  style='width:515px;' type="button" value="Generate Transaction" OnClick="doArbitraryTransactionV3()"/><br>
+	<input  style='width:515px;' type="button" id='generateTransaction' value="Generate Transaction" OnClick="doArbitraryTransactionV3()"/><br>
 
 
 	<textarea style='width:515px; height: 115px;' id=txRaw></textarea><br>	

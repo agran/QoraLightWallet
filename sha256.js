@@ -121,7 +121,7 @@ SHA256.digest = function(message) {
         hash[i + 24] = (h6 >>> (8 * (3 - i))) & 0xff;
         hash[i + 28] = (h7 >>> (8 * (3 - i))) & 0xff;
     }
-    return new Int8Array(hash);
+    return hash;
 }    
 
 // The hash function returns the hash value as a hex string.

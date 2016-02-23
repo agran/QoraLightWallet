@@ -113,15 +113,40 @@
 		}
 	}
 	
+	function onLoad()
+	{
+		if (/test/.test(window.location.hash)) 
+		{
+			$("#brainWalletPassphrase").val("12345678фыва");
+			$("#doBrainButton").click();
+			if($("#base58BaseSeed").val() == 'CjCmqGrNJoy499fMFGmonRipBc4GKk9RGRHF4BY7XSBN') {
+				$("#base58BaseSeed").css({"color": "green"});
+			} else {
+				$("#base58BaseSeed").css({"color": "red"});
+			}
+			
+			$("#base58AccountSeed").val("8stsVtM4gQsJbvVbDx1eszkd5zUWEtt6tmUwYBB4PmA3");
+			$("#doAccountFromSeedButton").click();
+
+			if($("#base58AccountAddress").val() == 'QMBKyCtSjjNETmNLQwfCxd6sADJNVXAShk') {
+			$("#base58AccountAddress").css({"color": "green"});
+			} else {
+				$("#base58AccountAddress").css({"color": "red"});
+			}
+		}
+	}
+	
+	
 </script>
-<body style="margin:4; padding:25">
+<body style="margin:4; padding:25" onload="onLoad()">
 	
 	<center>
-	<div style='height: 170px;' id='menu'></div>
+	<div style='height: 140px;' id='menu'></div>
+	<h3>Qora BrainWallet</h3>
 	<table>
 	<tr><td>
-	Brain Wallet Passphrase:<br>
-	<input style='width:485px;' type="text" size=60 value="" autofocus id="brainWalletPassphrase"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doBrain()"/><br><br>
+	Passphrase:<br>
+	<input style='width:485px;' type="text" size=60 value="" autofocus id="brainWalletPassphrase"/><input style='width:80px;' type="button" id='doBrainButton' value="Сonvert" OnClick="doBrain()"/><br><br>
 
 	Base Seed:<br>
 	<input style='width:485px;' type="text" size=60 value="" id="base58BaseSeed"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doAccounts()"/><br><br>
@@ -130,7 +155,7 @@
 	<div id="output"></div><br>
 
 	<b>Account:</b><br>
-    <span style='width:80px; display: inline-block;'>Seed:</span> <input style='width:400px;' type="text" value="" id="base58AccountSeed"/><input style='width:80px;' type="button" value="Сonvert" OnClick="doAccountFromSeed()"/><br>
+    <span style='width:80px; display: inline-block;'>Seed:</span> <input style='width:400px;' type="text" value="" id="base58AccountSeed"/><input style='width:80px;' type="button" id='doAccountFromSeedButton' value="Сonvert" OnClick="doAccountFromSeed()"/><br>
 
     <span style='width:80px; display: inline-block;'>privateKey:</span>
 	<input style='width:480px;' type="text" class="readonly" value="" readonly id="base58AccountPrivateKey"/><br>

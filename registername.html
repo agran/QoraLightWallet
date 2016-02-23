@@ -126,8 +126,8 @@
 			return;
 		}
 		
-		var nameBytes = new Uint8Array(toUTF8Array($("#nameStr").val()));
-		var valueBytes = new Uint8Array(toUTF8Array($("#valueStr").val()));
+		var nameBytes = stringtoUTF8Array($("#nameStr").val());
+		var valueBytes = stringtoUTF8Array($("#valueStr").val());
 		var owner = Base58.decode(base58SenderAccountAddress);
 		
 		var fee = parseFloat($('#fee').val());
@@ -137,7 +137,7 @@
 
 		registerNameTransactionRaw = generateRegisterNameTransaction(keyPair, base58LastReferenceOfAccount, owner, nameBytes, valueBytes, fee, timestamp, signature);
 
-		$("#txRaw").val(Base58.encode(new Uint8Array(registerNameTransactionRaw)));
+		$("#txRaw").val(Base58.encode(registerNameTransactionRaw));
 	}
 
 	function onLoad()
@@ -145,12 +145,22 @@
 		$("#nodeUrl").val(nodeUrl);
 		setInterval(doUpdate, 300);
 		
-		if(fasle) {
+		if (/test/.test(window.location.hash)) {
 			$("#base58SenderAccountSeed").val("3dnubGUuxK5oLhURK4WLtFL7rWgSKCj5MJc48AKD6FdD");
 			$("#timestamp").val("1455849866776");
 			$("#base58LastReferenceOfAccount").val("YWv9Gyi2xxEyEe6ztrGGuAPhmUD86s7h8CANQAcmsxdeS3pU5BvQKnbeyXjnXXd8HgLaDvYBBz6im3dDYTR817F");
 			$("#nameStr").val("проверкаимени");
 			$("#valueStr").val("Проверка значения");
+			$("#output").val('1113xUrqp9fbHjfR7GTP92AsiFVjaGFRL86rsCKzjDdfEEu5bDcvo6zwcUyBXDmHnkbJDVWz59cDvuBPiTGf9sxdEWMdUooaqT887VnmZoNKQb2AMr5G6YNkP2oiph76kaVRFucrsz1xg1DLbaj6azacCTQqdbwzPZK23rpMR6ETeyD7UFRJo7SyhKSE8Rwmzdx6M1E8BYd1Dy8A2GwVF9AyATrtD7EbWR814qhyiCBs8LFK6UXb2D9nKhYixqNMm5r4rRzUtMMhnH2LhcKrWFjYmJgCmgzqLCKGhY7odRdaAeG23qr6ekpaRZRHAPryb1dbYfFy4a7xJYAvLAkCtRUmydK4QMcFn1b5LNvaenC3Y2skD8');
+			
+			$("#generateTransaction").click();
+			
+			if($("#output").val() == $("#txRaw").val()) {
+				$("#txRaw").css({"color": "green"});
+			} else {
+				$("#txRaw").css({"color": "red"});
+			}
+			
 		}
 	}
 	
@@ -159,11 +169,11 @@
 <body style="margin:4; padding:25" onload="onLoad()">
 	
 	<center>
-	<div style='height: 170px;' id='menu'></div>
+	<div style='height: 140px;' id='menu'></div>
+	<h3>Qora RegisterName</h3>
 	<table class='nowrap'>
 	<tr><td>
-	
-	<b>Sender:</b><br>
+	<b>Creator:</b><br>
     <span style='width:110px; display: inline-block;'>Account Seed:</span> <input autofocus style='width:400px;' type="text" value="" id="base58SenderAccountSeed"/><br>
     <span style='width:110px; display: inline-block;'>Account addr:</span> <input style='width:400px;' type="text" value="" id="base58SenderAccountAddress"/><br>
     <span style='width:110px; display: inline-block;'>Balance:</span> <input style='width:360px;' class='readonly' readonly  type="text" value="" id="senderBalance"/><span style='width:40px; display: inline-block;'>&nbsp;Qora</span><br>
@@ -182,7 +192,7 @@
 	<textarea style='width:515px; height: 115px;' id=valueStr></textarea><br>	
 	
 	<br><br>
-	<input  style='width:515px;' type="button" value="Generate Transaction" OnClick="doRegisterNameTransaction()"/><br>
+	<input  style='width:515px;' type="button" id='generateTransaction' value="Generate Transaction" OnClick="doRegisterNameTransaction()"/><br>
 
 
 	<textarea style='width:515px; height: 115px;' id=txRaw></textarea><br>	

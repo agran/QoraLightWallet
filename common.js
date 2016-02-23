@@ -10,7 +10,7 @@
 		+ '<a href=arbitrarytransaction.html>ArbitraryTransaction</a> | '
 		+ '<a href=registername.html>RegisterName</a> | '
 		+ '<a href=http://mirror.qora.co.in:9090/index/blockexplorer.html>BlockExplorer</a>'
-		+ '</b><br><br>');
+		+ '</b>');
 		
 		$("#bottom").html('(c) <a href="mailto:agran@agran.net">agran</a><br>QTz6fSV2VNc2wjwwsw57kwQzgQhmGw5idQ');
 
@@ -243,35 +243,70 @@
 			.fail(function() {
 				$("#output").val( "error" );
 			});
-	}	
-	
-	function toUTF8Array(str) {
-		var utf8 = [];
-		for (var i=0; i < str.length; i++) {
-			var charcode = str.charCodeAt(i);
-			if (charcode < 0x80) utf8.push(charcode);
-			else if (charcode < 0x800) {
-				utf8.push(0xc0 | (charcode >> 6), 
-						  0x80 | (charcode & 0x3f));
-			}
-			else if (charcode < 0xd800 || charcode >= 0xe000) {
-				utf8.push(0xe0 | (charcode >> 12), 
-						  0x80 | ((charcode>>6) & 0x3f), 
-						  0x80 | (charcode & 0x3f));
-			}
-			// surrogate pair
-			else {
-				i++;
-				// UTF-16 encodes 0x10000-0x10FFFF by
-				// subtracting 0x10000 and splitting the
-				// 20 bits of 0x0-0xFFFFF into two halves
-				charcode = 0x10000 + (((charcode & 0x3ff)<<10)
-						  | (str.charCodeAt(i) & 0x3ff))
-				utf8.push(0xf0 | (charcode >>18), 
-						  0x80 | ((charcode>>12) & 0x3f), 
-						  0x80 | ((charcode>>6) & 0x3f), 
-						  0x80 | (charcode & 0x3f));
+	}
+
+	function stringtoUTF8Array(message) {
+		if (typeof message == 'string') {
+		   var s =  unescape(encodeURIComponent(message)); // UTF-8
+			message = new Uint8Array(s.length);
+			for (var i = 0; i < s.length; i++) {
+				message[i] = s.charCodeAt(i) & 0xff;
 			}
 		}
-		return utf8;
+		return message;
+	}
+	
+	function appendBuffer (buffer1, buffer2) {
+		buffer1 = new Uint8Array(buffer1);
+		buffer2 = new Uint8Array(buffer2);
+		var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+		tmp.set(buffer1, 0);
+		tmp.set(buffer2, buffer1.byteLength);
+		return tmp;
+	};
+	
+	if(false) {
+		var ls1 = new Uint8Array();
+		var byteArray = [0, 2, -1, 3, 0, 4, 0, 0];
+		
+		ls1 = appendBuffer(ls1, byteArray);
+		
+		var byteArray2 = [1, 2, 3, -30, 4, 0, 1];
+		
+		ls1 = appendBuffer(ls1, byteArray2);
+
+		console.log(ls1);
+		
+		publicKey = Base58.decode("9NfJZz5pLxhiFT8GfELoTw99x6JxR3mUiQ9SBsrwNbcp");
+		lastReference = Base58.decode("YWv9Gyi2xxEyEe6ztrGGuAPhmUD86s7h8CANQAcmsxdeS3pU5BvQKnbeyXjnXXd8HgLaDvYBBz6im3dDYTR817F");
+		recipient = Base58.decode("QTz6fSV2VNc2wjwwsw57kwQzgQhmGw5idQ");
+		var amount = parseFloat("123.12001");
+		var fee = parseFloat("1.0");
+		
+		var time1 = new Date();
+
+		for (var i = 0; i < 100000; i++) {
+			var timestamp = 1455849866776 - Math.random()*100000000;
+			buf = generatePaymentTransactionBase(publicKey, lastReference, recipient, amount, fee, timestamp);
+		}
+		
+		console.log(buf);
+		
+		var time2 = new Date();
+
+		console.log(time2.getTime() - time1.getTime());
+		
+		time1 = new Date();
+
+		for (var i = 0; i < 100000; i++) {
+			var timestamp = 1455849866776 - Math.random()*100000000;
+			buf = generatePaymentTransactionBase2(publicKey, lastReference, recipient, amount, fee, timestamp);
+		}
+		
+		console.log(buf);
+		
+		time2 = new Date();
+
+		console.log(time2.getTime() - time1.getTime());
+		
 	}

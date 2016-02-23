@@ -145,7 +145,7 @@
 		
 		paymentTransactionRaw = generatePaymentTransaction(keyPair, base58LastReferenceOfAccount, recipientAccountAddress, amount, fee, timestamp, signature);
 		
-		$("#txRaw").val(Base58.encode(new Uint8Array(paymentTransactionRaw)));
+		$("#txRaw").val(Base58.encode(paymentTransactionRaw));
 
 	}
 
@@ -153,6 +153,25 @@
 	{
 		$("#nodeUrl").val(nodeUrl);
 		setInterval(doUpdate, 300);
+		
+		if (/test/.test(window.location.hash)) 
+		{
+			$("#base58SenderAccountSeed").val('3dnubGUuxK5oLhURK4WLtFL7rWgSKCj5MJc48AKD6FdD');
+			$("#base58LastReferenceOfAccount").val('YWv9Gyi2xxEyEe6ztrGGuAPhmUD86s7h8CANQAcmsxdeS3pU5BvQKnbeyXjnXXd8HgLaDvYBBz6im3dDYTR817F');
+			$("#base58RecipientAccountAddress").val('QTz6fSV2VNc2wjwwsw57kwQzgQhmGw5idQ');
+			$("#timestamp").val('1455849866776');
+			$("#amount").val('100.00000000');
+			$("#fee").val('1.00000000');
+			$("#output").val('111C87H8Ud2M9kriW66fcZ6KVDx88n5eHQW4tMEaUmzoLibTm8QVB2fRJx88xctEhHg9g5vfJX396HBjc5TNG64Ewz8MRcyjnRvg5RpSnomHpcX2n8HgRUTNqq18MtEkceSMqWbATtH9uu5pBnMzdu4MjFf87he2smq39RVtwMJnuw4qgaVwNYCwSxZrRgsT6RGpGkBHZPzoYYh8qXffmLzHvawYJqp4xN41uMPpe7J4xxbPdN2av4HKjCNtB82sygUbbt6QDBW5wMFcJyGYMn3mJVmhsFonM');
+
+			$("#generateTransaction").click();
+			
+			if($("#output").val() == $("#txRaw").val()) {
+				$("#txRaw").css({"color": "green"});
+			} else {
+				$("#txRaw").css({"color": "red"});
+			}
+		}
 	}
 	
 	
@@ -160,7 +179,8 @@
 <body style="margin:4; padding:25" onload="onLoad()">
 	
 	<center>
-	<div style='height: 170px;' id='menu'></div>
+	<div style='height: 140px;' id='menu'></div>
+	<h3>Qora Payment</h3>
 	<table>
 	<tr><td>
 	
@@ -182,7 +202,7 @@
 	<span style='width:110px; display: inline-block;'>Timestamp:</span> <input style='width:122px;' type="text" value="" id="timestamp"/><span style='width:80px; display: inline-block;'>&nbsp;DateTime:</span><input style='width:158px;' class='readonly' readonly type="text" value="" id="datetime"/><input  style='width:40px; padding: 1px;' type="button" value="Now" OnClick="doNowTime()"/><br>
 
 	<br><br>
-	<input  style='width:515px;' type="button" value="Generate Transaction" OnClick="doPaymentTransaction()"/><br>
+	<input  style='width:515px;' type="button" id='generateTransaction' value="Generate Transaction" OnClick="doPaymentTransaction()"/><br>
 
 
 	<textarea style='width:515px; height: 115px;' id=txRaw></textarea><br>	

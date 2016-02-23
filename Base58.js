@@ -16,6 +16,7 @@
   }
 
   Base58.encode = function(buffer) {
+	buffer = new Uint8Array(buffer);
     var carry, digits, j;
     if (buffer.length === 0) {
       return "";
