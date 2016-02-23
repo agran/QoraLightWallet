@@ -244,26 +244,6 @@
 				$("#output").val( "error" );
 			});
 	}
-
-	function stringtoUTF8Array(message) {
-		if (typeof message == 'string') {
-		   var s =  unescape(encodeURIComponent(message)); // UTF-8
-			message = new Uint8Array(s.length);
-			for (var i = 0; i < s.length; i++) {
-				message[i] = s.charCodeAt(i) & 0xff;
-			}
-		}
-		return message;
-	}
-	
-	function appendBuffer (buffer1, buffer2) {
-		buffer1 = new Uint8Array(buffer1);
-		buffer2 = new Uint8Array(buffer2);
-		var tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
-		tmp.set(buffer1, 0);
-		tmp.set(buffer2, buffer1.byteLength);
-		return tmp;
-	};
 	
 	if(false) {
 		var ls1 = new Uint8Array();
