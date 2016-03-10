@@ -226,7 +226,7 @@
 		var nodeUrl = $("#nodeUrl").val();
 
 		$('#base58LastReferenceOfAccount').val('...');
-		$.post( nodeUrl + "/index/api.html", { type: "get", apiurl: "/addresses/lastreference/" + base58SenderAccountAddress } )
+		$.post( nodeUrl + "/index/api.html", { type: "get", apiurl: "/addresses/lastreference/" + base58SenderAccountAddress + "/unconfirmed" } )
 			.done(function( data ) {
 				
 				if(data.type == 'success'){
