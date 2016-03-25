@@ -66,7 +66,7 @@ function int32ToBytes (word) {
 		byteArray.push((word >>> (24 - b % 32)) & 0xFF);
 	}
 	return byteArray;
-};
+}
 
 function int64ToBytes (int64) {
     // we want to represent the input as a 8-bytes array
@@ -79,7 +79,7 @@ function int64ToBytes (int64) {
     }
 
     return byteArray;
-};
+}
 
 function appendBuffer (buffer1, buffer2) {
 	buffer1 = new Uint8Array(buffer1);
@@ -88,7 +88,19 @@ function appendBuffer (buffer1, buffer2) {
 	tmp.set(buffer1, 0);
 	tmp.set(buffer2, buffer1.byteLength);
 	return tmp;
-};
+}
+
+function equal (buf1, buf2)
+{
+    if (buf1.byteLength != buf2.byteLength) return false;
+    var dv1 = new Uint8Array(buf1);
+    var dv2 = new Uint8Array(buf2);
+    for (var i = 0; i != buf1.byteLength; i++)
+    {
+        if (dv1[i] != dv2[i]) return false;
+    }
+    return true;
+}
 
 function generateAccountSeed(seed, nonce, returnBase58)
 {
@@ -133,9 +145,49 @@ function getAccountAddressFromPublicKey(publicKey)
 
 	var checkSum = SHA256.digest(SHA256.digest(addressArray));
 
-	addressArray = appendBuffer(addressArray, checkSum.subarray(0,4));
+	addressArray = appendBuffer(addressArray, checkSum.subarray(0, 4));
 
 	return Base58.encode(addressArray);
+}
+
+function getAccountAddressType(address)
+{
+	try {
+		var ADDRESS_VERSION = 58;  // Q
+		var AT_ADDRESS_VERSION = 23; // A
+		
+		if(typeof(address) == "string") {
+			address = Base58.decode(address);
+		}
+		
+		var checkSum = address.subarray(address.length - 4, address.length)
+		var addressWitoutChecksum = address.subarray(0, address.length - 4);
+
+		var checkSumTwo = SHA256.digest(SHA256.digest(addressWitoutChecksum));
+		checkSumTwo = checkSumTwo.subarray(0, 4);
+		
+		if (equal(checkSum, checkSumTwo))
+		{
+			if(address[0] == ADDRESS_VERSION)
+			{
+				return "standard";
+			}
+			if(address[0] == AT_ADDRESS_VERSION)
+			{
+				return "at";
+			}
+		}
+
+		return "invalid";
+
+	} catch (e) {
+		return "invalid";
+	}
+}
+
+function isValidAddress(address) 
+{
+	return (getAccountAddressType(address) != "invalid");
 }
 
 function generateSignaturePaymentTransaction(keyPair, lastReference, recipient, amount, fee, timestamp) {
